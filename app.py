@@ -111,10 +111,10 @@ def download(course, week):
             print(f"Logo error: {e}")
 
         # 2. Add a Title next to the logo
-        ws['C2'] = "Southern Labs Institute of Technology"
-        ws['C2'].font = Font(size=16, bold=True, color='003366')
-        ws['C3'] = f"Attendance Report: {course} - Week {week}"
-        ws['C3'].font = Font(size=12, bold=True)
+        ws['D2'] = "Southern Labs Institute of Technology"
+        ws['D2'].font = Font(size=16, bold=True, color='003366')
+        ws['D3'] = f"Attendance Report: {course} - Week {week}"
+        ws['D3'].font = Font(size=12, bold=True)
 
         # 3. Styling the Data Header (Now on row 6)
         fill = PatternFill(start_color='003366', end_color='003366', fill_type='solid')
