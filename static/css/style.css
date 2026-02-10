@@ -1,0 +1,12 @@
+:root { --navy: #003366; --orange: #FF8C00; }
+body { background: #f4f4f4; font-family: sans-serif; display: flex; justify-content: center; padding: 20px; }
+.container { background: white; width: 100%; max-width: 450px; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+.header { background: var(--navy); color: white; text-align: center; padding: 20px; }
+.logo { width: 70%; max-width: 200px; border-radius: 5px; background: white; padding: 5px; }
+form { padding: 20px; }
+input, select { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 5px; box-sizing: border-box; }
+.radio-group { border: 1px solid #ccc; padding: 10px; border-radius: 5px; margin-bottom: 10px; }
+.radio-options { display: flex; gap: 15px; }
+.radio-options label { font-size: 14px; }
+.radio-options input { width: auto; margin-right: 5px; }
+button { width: 100%; padding: 15px; background: var(--orange); color: white; border: none; border-radius: 5px; font-weight: bold; cursor: pointer; }
