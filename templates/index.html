@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Southern Labs Check-in</title>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <img src="{{ url_for('static', filename='images/logo.jpg') }}" class="logo">
+            <h1>Attendance Registry</h1>
+        </div>
+        <form action="/submit" method="POST" id="checkinForm">
+            <input type="hidden" name="latitude" id="lat">
+            <input type="hidden" name="longitude" id="lon">
+            
+            <input type="text" name="first_name" placeholder="First Name" required>
+            <input type="text" name="middle_name" placeholder="Middle Name (Optional)">
+            <input type="text" name="last_name" placeholder="Last Name" required>
+            <input type="text" name="id_passport" placeholder="ID / Passport Number" required>
+            <input type="email" name="email" placeholder="Email Address" required>
+            <input type="tel" name="phone" placeholder="Cellphone Number" required>
+            
+            <select name="ethnicity" required>
+                <option value="" disabled selected>Select Ethnicity</option>
+                <option value="Black African">Black African</option>
+                <option value="Coloured">Coloured</option>
+                <option value="Indian/Asian">Indian/Asian</option>
+                <option value="White">White</option>
+            </select>
+
+            <div class="radio-group">
+                <p>Gender:</p>
+                <div class="radio-options">
+                    <label><input type="radio" name="gender" value="Male" required> Male</label>
+                    <label><input type="radio" name="gender" value="Female"> Female</label>
+                    <label><input type="radio" name="gender" value="Other"> Other</label>
+                </div>
+            </div>
+
+            <select name="course" required>
+                <option value="" disabled selected>Select Course</option>
+                <option value="WPE">Workplace Essential Skills (WPE)</option>
+                <option value="MCC">Microsoft Crash Course (MCC)</option>
+            </select>
+
+            <button type="submit" id="submitBtn">Check In</button>
+        </form>
+    </div>
+    <script>
+        window.onload = function() {
+            navigator.geolocation.getCurrentPosition(pos => {
+                document.getElementById('lat').value = pos.coords.latitude;
+                document.getElementById('lon').value = pos.coords.longitude;
+            }, err => { alert("Location access is required!"); });
+        }
+    </script>
+</body>
+</html>
