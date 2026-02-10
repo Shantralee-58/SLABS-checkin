@@ -90,19 +90,48 @@ def download(course, week):
         return f"<h1>No data</h1><p>No {course} check-ins for Week {week}.</p>"
 
     df.columns = ['ID', 'First Name', 'Middle Name', 'Last Name', 'ID/Passport', 'Email', 'Phone', 'Ethnicity', 'Gender', 'Course', 'Week', 'Time']
+    
     os.makedirs('exports', exist_ok=True)
     filename = f"exports/SouthernLabs_{course}_Week_{week}.xlsx"
     
     with pd.ExcelWriter(filename, engine='openpyxl') as writer:
-        df.to_excel(writer, index=False, sheet_name='Attendance')
+        # Start data at row 6 to leave room for the logo
+        df.to_excel(writer, index=False, sheet_name='Attendance', startrow=5)
         ws = writer.sheets['Attendance']
+        
+        # 1. Insert the Logo at Top Left (Cell A1)
+        try:
+            logo_path = os.path.join('static', 'images', 'logo.jpg')
+            img = OpenpyxlImage(logo_path)
+            # Resize logo to fit nicely (Approx 100x100 pixels)
+            img.width = 100 
+            img.height = 100
+            ws.add_image(img, 'A1')
+        except Exception as e:
+            print(f"Logo error: {e}")
+
+        # 2. Add a Title next to the logo
+        ws['C2'] = "Southern Labs Institute of Technology"
+        ws['C2'].font = Font(size=16, bold=True, color='003366')
+        ws['C3'] = f"Attendance Report: {course} - Week {week}"
+        ws['C3'].font = Font(size=12, bold=True)
+
+        # 3. Styling the Data Header (Now on row 6)
         fill = PatternFill(start_color='003366', end_color='003366', fill_type='solid')
         font = Font(color='FFFFFF', bold=True)
-        for cell in ws[1]:
+        for cell in ws[6]: # Data headers are now on row 6
             cell.fill, cell.font = fill, font
-        for col in ws.columns:
-            ws.column_dimensions[col[0].column_letter].width = 20
             
+        # 4. Auto-fit columns
+        for col in ws.columns:
+            ws.column_dimensions[col[0].column_letter].width = 22
+
+        # 5. Add Facilitator Signature at the bottom
+        last_row = len(df) + 9 
+        signature_font = Font(bold=True, size=12)
+        ws.cell(row=last_row, column=1).value = "Facilitator Signature: ___________________________"
+        ws.cell(row=last_row, column=1).font = signature_font
+
     return send_file(filename, as_attachment=True)
 
 if __name__ == '__main__':
