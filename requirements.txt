@@ -4,3 +4,4 @@ openpyxl
 gunicorn
 Pillow
 psycopg2-binary
+SQLAlchemy
