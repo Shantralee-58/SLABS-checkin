@@ -2,3 +2,5 @@ Flask
 pandas
 openpyxl
 gunicorn
+Pillow
+psycopg2-binary
