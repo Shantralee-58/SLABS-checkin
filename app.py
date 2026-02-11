@@ -17,6 +17,13 @@ CAMPUS_LON = 28.0538272
 MAX_DISTANCE_KM = 0.2  # 200 meter radius
 START_DATE = datetime(2026, 2, 13)
 
+def get_db_url():
+    """Handles Render's database URL formatting requirement."""
+    url = os.environ.get('DATABASE_URL')
+    if url and url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql://", 1)
+    return url
+
 def calculate_distance(lat1, lon1):
     """Haversine formula to verify student location."""
     lon1, lat1, lon2, lat2 = map(radians, [lon1, lat1, CAMPUS_LON, CAMPUS_LAT])
@@ -26,15 +33,10 @@ def calculate_distance(lat1, lon1):
 
 def get_db_connection():
     """Connects using the DATABASE_URL environment variable from Render."""
-    db_url = os.environ.get('DATABASE_URL')
-    # Fix for Render's postgres:// prefix which causes issues with modern drivers
-    if db_url and db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-    conn = psycopg2.connect(db_url)
-    return conn
+    return psycopg2.connect(get_db_url())
 
 def init_db():
-    """Creates the permanent table if it does not exist."""
+    """Force creates the table if it's missing."""
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute('''
@@ -63,6 +65,12 @@ def index():
 
 @app.route('/submit', methods=['POST'])
 def submit():
+    # Make sure the table exists right before we try to use it
+    try:
+        init_db()
+    except Exception as e:
+        print(f"Table Init Error: {e}")
+
     user_lat = request.form.get('latitude')
     user_lon = request.form.get('longitude')
 
@@ -96,6 +104,8 @@ def submit():
 
 @app.route('/admin')
 def admin():
+    # Ensure table exists for admin view too
+    init_db()
     conn = get_db_connection()
     cur = conn.cursor(cursor_factory=RealDictCursor)
     cur.execute('SELECT * FROM check_ins ORDER BY check_in_time DESC')
@@ -106,17 +116,13 @@ def admin():
 
 @app.route('/download/<string:course>/<int:week>')
 def download(course, week):
-    db_url = os.environ.get('DATABASE_URL')
-    if db_url and db_url.startswith("postgres://"):
-        db_url = db_url.replace("postgres://", "postgresql://", 1)
-    
+    db_url = get_db_url()
     df = pd.read_sql_query("SELECT * FROM check_ins WHERE week_number = %s AND course = %s",
                            db_url, params=(week, course))
 
     if df.empty:
         return f"<h1>No Data</h1><p>No records for {course} in Week {week}.</p>"
 
-    # Professional column headers
     df.columns = ['ID', 'First Name', 'Middle Name', 'Last Name', 'ID/Passport', 'Email', 'Phone', 'Ethnicity', 'Gender', 'Course', 'Week', 'Time']
 
     os.makedirs('exports', exist_ok=True)
@@ -126,7 +132,7 @@ def download(course, week):
         df.to_excel(writer, index=False, sheet_name='Attendance', startrow=5)
         ws = writer.sheets['Attendance']
 
-        # 1. Logo Insertion
+        # Logo Insertion (ensure your logo name is correct)
         try:
             logo_path = os.path.join('static', 'images', 'logo.jpg')
             img = OpenpyxlImage(logo_path)
@@ -135,7 +141,6 @@ def download(course, week):
         except:
             pass
 
-        # 2. Styling Headers
         ws['D2'] = "Southern Labs Institute of Technology"
         ws['D2'].font = Font(size=16, bold=True, color='003366')
         ws['D3'] = f"Attendance Report: {course} - Week {week}"
@@ -145,7 +150,6 @@ def download(course, week):
         for cell in ws[6]:
             cell.fill, cell.font = header_fill, header_font
 
-        # 3. Signature line
         last_row = len(df) + 9
         ws.cell(row=last_row, column=1).value = "Facilitator Signature: ___________________________"
         ws.cell(row=last_row, column=1).font = Font(bold=True)
@@ -153,10 +157,5 @@ def download(course, week):
     return send_file(filename, as_attachment=True)
 
 if __name__ == '__main__':
-    try:
-        init_db()
-    except Exception as e:
-        print(f"Startup Error: {e}")
-    
     port = int(os.environ.get("PORT", 5000))
     app.run(host='0.0.0.0', port=port)
